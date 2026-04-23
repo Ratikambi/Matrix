@@ -54,10 +54,15 @@ async function getLocationName(lat: number, lng: number): Promise<string> {
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
     const response = await fetch(
       `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lng}&limit=1&appid=${apiKey}`,
-      { timeout: 5000 }
+      { signal: controller.signal }
     );
+    clearTimeout(timeoutId);
+    
     if (!response.ok) return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
     
     const data = await response.json();
