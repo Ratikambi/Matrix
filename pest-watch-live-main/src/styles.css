@@ -1,0 +1,179 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * AgriPredict — agricultural SaaS design system.
+ * Earthy greens, warm cream backgrounds, clean SaaS feel.
+ */
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --color-risk-low: var(--risk-low);
+  --color-risk-low-foreground: var(--risk-low-foreground);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-medium-foreground: var(--risk-medium-foreground);
+  --color-risk-high: var(--risk-high);
+  --color-risk-high-foreground: var(--risk-high-foreground);
+  --color-leaf: var(--leaf);
+  --color-soil: var(--soil);
+  --color-sky: var(--sky);
+  --color-cream: var(--cream);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --shadow-card: 0 1px 2px 0 oklch(0.2 0.04 145 / 0.04), 0 4px 16px -4px oklch(0.2 0.04 145 / 0.06);
+  --shadow-elevated: 0 8px 32px -8px oklch(0.2 0.04 145 / 0.18);
+  --shadow-glow-leaf: 0 0 0 4px oklch(0.62 0.16 145 / 0.12);
+}
+
+:root {
+  --radius: 0.875rem;
+
+  --background: oklch(0.985 0.012 110);
+  --foreground: oklch(0.22 0.04 150);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.04 150);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.04 150);
+
+  --primary: oklch(0.52 0.13 148);
+  --primary-foreground: oklch(0.99 0.01 145);
+
+  --secondary: oklch(0.95 0.02 130);
+  --secondary-foreground: oklch(0.3 0.06 150);
+
+  --muted: oklch(0.96 0.013 120);
+  --muted-foreground: oklch(0.5 0.02 150);
+
+  --accent: oklch(0.93 0.06 130);
+  --accent-foreground: oklch(0.3 0.08 150);
+
+  --destructive: oklch(0.58 0.21 27);
+  --destructive-foreground: oklch(0.99 0.01 0);
+
+  --border: oklch(0.91 0.015 130);
+  --input: oklch(0.92 0.012 130);
+  --ring: oklch(0.55 0.13 148);
+
+  --risk-low: oklch(0.7 0.16 148);
+  --risk-low-foreground: oklch(0.22 0.07 150);
+  --risk-medium: oklch(0.78 0.15 78);
+  --risk-medium-foreground: oklch(0.28 0.08 70);
+  --risk-high: oklch(0.62 0.22 27);
+  --risk-high-foreground: oklch(0.99 0.01 0);
+
+  --leaf: oklch(0.55 0.15 148);
+  --soil: oklch(0.45 0.06 50);
+  --sky: oklch(0.7 0.1 230);
+  --cream: oklch(0.97 0.02 90);
+
+  --chart-1: oklch(0.55 0.15 148);
+  --chart-2: oklch(0.65 0.13 230);
+  --chart-3: oklch(0.7 0.15 78);
+  --chart-4: oklch(0.62 0.22 27);
+  --chart-5: oklch(0.5 0.08 280);
+}
+
+.dark {
+  --background: oklch(0.18 0.025 150);
+  --foreground: oklch(0.96 0.01 130);
+  --card: oklch(0.22 0.03 150);
+  --card-foreground: oklch(0.96 0.01 130);
+  --popover: oklch(0.22 0.03 150);
+  --popover-foreground: oklch(0.96 0.01 130);
+  --primary: oklch(0.7 0.16 148);
+  --primary-foreground: oklch(0.18 0.04 150);
+  --secondary: oklch(0.27 0.03 150);
+  --secondary-foreground: oklch(0.96 0.01 130);
+  --muted: oklch(0.26 0.025 150);
+  --muted-foreground: oklch(0.7 0.02 130);
+  --accent: oklch(0.3 0.06 150);
+  --accent-foreground: oklch(0.96 0.01 130);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.16 148);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { height: 100%; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.55 0.15 148 / 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.7 0.15 78 / 0.06), transparent);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+}
+
+/* Live pulse for "live data" indicators */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.live-dot {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+/* Map overrides */
+.leaflet-container {
+  background: oklch(0.94 0.02 130);
+  font-family: var(--font-sans);
+  border-radius: var(--radius-lg);
+}
+.leaflet-tooltip.risk-tooltip {
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-elevated);
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+}
+.leaflet-tooltip.risk-tooltip::before { display: none; }
