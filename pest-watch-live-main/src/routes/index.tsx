@@ -34,7 +34,8 @@ function Dashboard() {
   const [series, setSeries] = useState<ChartPoint[]>([]);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<string>("Divgi, Karnataka");
+  const [selectedLocation, setSelectedLocation] = useState<string>("Tiptur, Karnataka");
+  const [isManuallySelected, setIsManuallySelected] = useState<boolean>(false);
 
   // Karnataka locations only
   const locations: Record<string, { lat: number; lng: number }> = {
@@ -48,53 +49,24 @@ function Dashboard() {
     "Mysore, Karnataka": { lat: 12.2958, lng: 76.6394 },
   };
 
-  // Detect user's geolocation on mount
+  // Detect user's geolocation on mount - BUT don't override manual selection
   useEffect(() => {
-    // Default to Divgi, Karnataka
-    const defaultLoc = locations["Divgi, Karnataka"];
+    // FORCE Tiptur, Karnataka as the default location (user's confirmed location)
+    const defaultLoc = locations["Tiptur, Karnataka"];
     let hasSetLocation = false;
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log("📍 Geolocation detected:", {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          setUserLat(position.coords.latitude);
-          setUserLng(position.coords.longitude);
-          hasSetLocation = true;
-        },
-        (error) => {
-          console.warn("⚠️ Geolocation error:", error.message);
-          console.log("📍 Using default location: Divgi, Karnataka");
-          setUserLat(defaultLoc.lat);
-          setUserLng(defaultLoc.lng);
-          setSelectedLocation("Divgi, Karnataka");
-          hasSetLocation = true;
-        },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
-      );
-    } else {
-      console.warn("🚫 Geolocation not supported by browser");
+    // For now, always use Tiptur coordinates (user confirmed they are in Tiptur)
+    // Geolocation can be inaccurate, so we override it with the correct coordinates
+    if (!isManuallySelected) {
+      console.log("📍 Using Tiptur, Karnataka (confirmed user location)");
       setUserLat(defaultLoc.lat);
       setUserLng(defaultLoc.lng);
-      setSelectedLocation("Divgi, Karnataka");
+      setSelectedLocation("Tiptur, Karnataka");
       hasSetLocation = true;
     }
 
-    // Fallback timeout - if geolocation takes too long
-    const fallbackTimer = setTimeout(() => {
-      if (!hasSetLocation) {
-        console.log("📍 Geolocation timeout - using default: Divgi, Karnataka");
-        setUserLat(defaultLoc.lat);
-        setUserLng(defaultLoc.lng);
-        setSelectedLocation("Divgi, Karnataka");
-      }
-    }, 10000);
-
-    return () => clearTimeout(fallbackTimer);
-  }, []);
+    return () => {};
+  }, [isManuallySelected]);
 
   useEffect(() => {
     async function fetchLive() {
@@ -184,7 +156,8 @@ function Dashboard() {
                 const locName = e.target.value;
                 const loc = locations[locName];
                 if (loc) {
-                  console.log(`📍 Location changed to: ${locName} (${loc.lat}, ${loc.lng})`);
+                  console.log(`📍 Manually selected: ${locName} (${loc.lat}, ${loc.lng})`);
+                  setIsManuallySelected(true);
                   setSelectedLocation(locName);
                   setUserLat(loc.lat);
                   setUserLng(loc.lng);

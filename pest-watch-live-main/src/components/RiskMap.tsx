@@ -16,7 +16,7 @@ const colorByLevel = {
   LOW: "#46b06b",
 } as const;
 
-export function RiskMap({ center = [15.5, 75.9] as [number, number], riskZones = [] }: { center?: [number, number]; riskZones?: RiskZone[] }) {
+export function RiskMap({ center = [13.4755, 75.8129] as [number, number], riskZones = [] }: { center?: [number, number]; riskZones?: RiskZone[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
 
@@ -55,7 +55,7 @@ export function RiskMap({ center = [15.5, 75.9] as [number, number], riskZones =
 
       L.marker(center)
         .addTo(map)
-        .bindPopup("<strong>Your Field</strong><br/>Pune, Maharashtra");
+        .bindPopup("<strong>Your Field</strong><br/>Tiptur, Karnataka");
 
       riskZones.forEach((z) => {
         L.circle([z.lat, z.lng], {
