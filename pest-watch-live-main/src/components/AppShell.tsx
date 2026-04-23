@@ -2,7 +2,6 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Leaf,
   LayoutDashboard,
-  CloudSun,
   Bug,
   Map as MapIcon,
   Bell,
@@ -19,7 +18,6 @@ import { useState } from "react";
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/ai-brain", label: "AI Brain", icon: BrainCircuit },
-  { to: "/weather", label: "Weather", icon: CloudSun },
   { to: "/prediction", label: "Prediction", icon: Bug },
   { to: "/map", label: "Field Map", icon: MapIcon },
   { to: "/alerts", label: "Alerts", icon: Bell, badge: 12 },
