@@ -21,35 +21,58 @@ export interface PestPrediction {
 }
 
 const baseLocation = {
-  location: "Pune, Maharashtra",
-  lat: 18.5204,
-  lng: 73.8567,
+  location: "Tiptur, Karnataka",
+  lat: 13.4755,
+  lng: 75.8129,
 };
 
-// Known Karnataka locations for fast lookup
+// Known Karnataka locations for fast lookup - with more precise radius
 const karnatakaCities = [
-  { id: "z1", name: "Divgi, Karnataka", lat: 13.9673, lng: 75.1239, radius: 0.02 },
-  { id: "z2", name: "Tiptur, Karnataka", lat: 13.4755, lng: 75.8129, radius: 0.02 },
+  { id: "z1", name: "Divgi, Karnataka", lat: 13.9673, lng: 75.1239, radius: 0.015 },
+  { id: "z2", name: "Tiptur, Karnataka", lat: 13.4755, lng: 75.8129, radius: 0.015 },
   { id: "z3", name: "Bangalore, Karnataka", lat: 12.9716, lng: 77.5946, radius: 0.05 },
-  { id: "z4", name: "Belgaum, Karnataka", lat: 15.8628, lng: 75.6236, radius: 0.02 },
-  { id: "z5", name: "Dharwad, Karnataka", lat: 15.4589, lng: 75.5239, radius: 0.02 },
-  { id: "z6", name: "Hubballi, Karnataka", lat: 15.3647, lng: 75.1066, radius: 0.02 },
+  { id: "z4", name: "Belgaum, Karnataka", lat: 15.8628, lng: 75.6236, radius: 0.015 },
+  { id: "z5", name: "Dharwad, Karnataka", lat: 15.4589, lng: 75.5239, radius: 0.015 },
+  { id: "z6", name: "Hubballi, Karnataka", lat: 15.3647, lng: 75.1066, radius: 0.015 },
   { id: "z7", name: "Mangalore, Karnataka", lat: 12.8628, lng: 74.8628, radius: 0.03 },
   { id: "z8", name: "Mysore, Karnataka", lat: 12.2958, lng: 76.6394, radius: 0.03 },
 ];
 
+// Calculate distance between two coordinates using Haversine formula (in km)
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 // Find nearest known location or reverse geocode
 async function getLocationName(lat: number, lng: number): Promise<string> {
-  // Check if coordinates match a known Karnataka city
+  // Find closest known Karnataka city using distance calculation
+  let closestCity = null;
+  let closestDistance = Infinity;
+  
   for (const city of karnatakaCities) {
-    const latDiff = Math.abs(city.lat - lat);
-    const lngDiff = Math.abs(city.lng - lng);
-    if (latDiff < city.radius && lngDiff < city.radius) {
-      return city.name;
+    const distance = calculateDistance(lat, lng, city.lat, city.lng);
+    // Track the closest city
+    if (distance < closestDistance) {
+      closestCity = city;
+      closestDistance = distance;
     }
   }
+  
+  // If closest city is within 10 km, USE IT (stronger matching for accurate location display)
+  if (closestCity && closestDistance < 10) {
+    console.log(`✅ MATCHED: ${closestCity.name} (distance: ${closestDistance.toFixed(2)} km)`);
+    return closestCity.name;
+  }
 
-  // Try reverse geocoding for unknown locations
+  // Only use reverse geocoding if no known city matches
+  console.log(`⚠️ No known city within 10km, attempting reverse geocoding...`);
   try {
     const apiKey = process.env.OPENWEATHER_API_KEY;
     if (!apiKey) return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
@@ -67,12 +90,42 @@ async function getLocationName(lat: number, lng: number): Promise<string> {
     
     const data = await response.json();
     if (data && data[0]) {
-      const { name, state, country } = data[0];
-      return `${name}${state ? ", " + state : ""}${country && country !== "IN" ? ", " + country : ""}`;
+      let locationName = data[0].name;
+      const { state, country } = data[0];
+      
+      // If reverse geocoding returns a taluk/district, check if we have a known city nearby
+      const nearbyCity = karnatakaCities.find(city => {
+        const distance = calculateDistance(lat, lng, city.lat, city.lng);
+        return distance < 3; // Within 3 km
+      });
+      
+      if (nearbyCity) {
+        locationName = nearbyCity.name.split(",")[0]; // Use city name from our list
+      } else {
+        locationName = `${locationName}${state ? ", " + state : ""}${country && country !== "IN" ? ", " + country : ""}`;
+      }
+      
+      return locationName;
     }
     return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
   } catch (err) {
     console.error("Reverse geocoding failed:", err);
+    // If reverse geocoding fails, try to find the nearest known city
+    let nearestCity = null;
+    let nearestDistance = Infinity;
+    
+    for (const city of karnatakaCities) {
+      const distance = calculateDistance(lat, lng, city.lat, city.lng);
+      if (distance < nearestDistance) {
+        nearestCity = city;
+        nearestDistance = distance;
+      }
+    }
+    
+    if (nearestCity && nearestDistance < 10) { // Within 10 km
+      return nearestCity.name;
+    }
+    
     return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
   }
 }
@@ -84,13 +137,19 @@ export async function generateWeather(lat?: number, lng?: number, seed = Date.no
     lng: lng ?? baseLocation.lng,
   };
 
+  console.log(`🌐 API Key present: ${!!apiKey}`);
+  
   if (apiKey) {
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lng}&appid=${apiKey}&units=metric`
-      );
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lng}&appid=${apiKey}&units=metric`;
+      console.log(`📡 Fetching weather from OpenWeather for coordinates: ${location.lat}, ${location.lng}`);
+      
+      const response = await fetch(url);
+      console.log(`📊 OpenWeather API response status: ${response.status}`);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log(`✅ Real API data received: Temp=${data.main.temp}°C, Humidity=${data.main.humidity}%`);
         const locationName = await getLocationName(location.lat, location.lng);
         return {
           temperature: data.main.temp,
@@ -103,11 +162,15 @@ export async function generateWeather(lat?: number, lng?: number, seed = Date.no
           updatedAt: Date.now(),
         };
       } else {
-        console.warn("OpenWeather API returned status", response.status);
+        console.warn(`⚠️ OpenWeather API returned status ${response.status}`);
+        const errorText = await response.text();
+        console.warn(`⚠️ Error response: ${errorText}`);
       }
     } catch (err) {
-      console.error("OpenWeather API failed, falling back to mock data", err);
+      console.error(`❌ OpenWeather API failed:`, err);
     }
+  } else {
+    console.warn(`⚠️ OPENWEATHER_API_KEY not set in environment`);
   }
 
   const t = Math.sin(seed / 60000) * 4 + 28; // 24-32°C

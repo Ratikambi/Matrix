@@ -24,9 +24,9 @@ export interface PestPrediction {
 }
 
 const baseLocation = {
-  location: "Pune, Maharashtra",
-  lat: 18.5204,
-  lng: 73.8567,
+  location: "Tiptur, Karnataka",
+  lat: 13.4755,
+  lng: 75.8129,
 };
 
 export function generateWeather(seed = Date.now()): WeatherSnapshot {
