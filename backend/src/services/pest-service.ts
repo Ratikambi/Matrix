@@ -26,26 +26,49 @@ const baseLocation = {
   lng: 73.8567,
 };
 
-// Reverse geocode coordinates to city name using OpenWeather API
+// Known Karnataka locations for fast lookup
+const karnatakaCities = [
+  { name: "Divgi, Karnataka", lat: 13.9673, lng: 75.1239, radius: 0.02 },
+  { name: "Tiptur, Karnataka", lat: 13.4755, lng: 75.8129, radius: 0.02 },
+  { name: "Bangalore, Karnataka", lat: 12.9716, lng: 77.5946, radius: 0.05 },
+  { name: "Belgaum, Karnataka", lat: 15.8628, lng: 75.6236, radius: 0.02 },
+  { name: "Dharwad, Karnataka", lat: 15.4589, lng: 75.5239, radius: 0.02 },
+  { name: "Hubballi, Karnataka", lat: 15.3647, lng: 75.1066, radius: 0.02 },
+  { name: "Mangalore, Karnataka", lat: 12.8628, lng: 74.8628, radius: 0.03 },
+  { name: "Mysore, Karnataka", lat: 12.2958, lng: 76.6394, radius: 0.03 },
+];
+
+// Find nearest known location or reverse geocode
 async function getLocationName(lat: number, lng: number): Promise<string> {
+  // Check if coordinates match a known Karnataka city
+  for (const city of karnatakaCities) {
+    const latDiff = Math.abs(city.lat - lat);
+    const lngDiff = Math.abs(city.lng - lng);
+    if (latDiff < city.radius && lngDiff < city.radius) {
+      return city.name;
+    }
+  }
+
+  // Try reverse geocoding for unknown locations
   try {
     const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) return "Unknown Location";
+    if (!apiKey) return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
     
     const response = await fetch(
-      `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lng}&limit=1&appid=${apiKey}`
+      `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lng}&limit=1&appid=${apiKey}`,
+      { timeout: 5000 }
     );
-    if (!response.ok) return "Unknown Location";
+    if (!response.ok) return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
     
     const data = await response.json();
     if (data && data[0]) {
       const { name, state, country } = data[0];
       return `${name}${state ? ", " + state : ""}${country && country !== "IN" ? ", " + country : ""}`;
     }
-    return "Unknown Location";
+    return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
   } catch (err) {
     console.error("Reverse geocoding failed:", err);
-    return "Unknown Location";
+    return `Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
   }
 }
 

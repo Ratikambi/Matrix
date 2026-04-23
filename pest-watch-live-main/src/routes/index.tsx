@@ -34,19 +34,26 @@ function Dashboard() {
   const [series, setSeries] = useState<ChartPoint[]>([]);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string>("Divgi, Karnataka");
 
-  // Locations map for quick selection
+  // Karnataka locations only
   const locations: Record<string, { lat: number; lng: number }> = {
     "Divgi, Karnataka": { lat: 13.9673, lng: 75.1239 },
     "Tiptur, Karnataka": { lat: 13.4755, lng: 75.8129 },
     "Bangalore, Karnataka": { lat: 12.9716, lng: 77.5946 },
-    "Pune, Maharashtra": { lat: 18.5204, lng: 73.8567 },
     "Belgaum, Karnataka": { lat: 15.8628, lng: 75.6236 },
     "Dharwad, Karnataka": { lat: 15.4589, lng: 75.5239 },
+    "Hubballi, Karnataka": { lat: 15.3647, lng: 75.1066 },
+    "Mangalore, Karnataka": { lat: 12.8628, lng: 74.8628 },
+    "Mysore, Karnataka": { lat: 12.2958, lng: 76.6394 },
   };
 
   // Detect user's geolocation on mount
   useEffect(() => {
+    // Default to Divgi, Karnataka
+    const defaultLoc = locations["Divgi, Karnataka"];
+    let hasSetLocation = false;
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -56,22 +63,37 @@ function Dashboard() {
           });
           setUserLat(position.coords.latitude);
           setUserLng(position.coords.longitude);
+          hasSetLocation = true;
         },
         (error) => {
           console.warn("⚠️ Geolocation error:", error.message);
-          console.log("📍 Using default location (Pune, Maharashtra)");
-          // Fall back to default location - explicitly set it
-          setUserLat(18.5204);
-          setUserLng(73.8567);
+          console.log("📍 Using default location: Divgi, Karnataka");
+          setUserLat(defaultLoc.lat);
+          setUserLng(defaultLoc.lng);
+          setSelectedLocation("Divgi, Karnataka");
+          hasSetLocation = true;
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
       );
     } else {
       console.warn("🚫 Geolocation not supported by browser");
-      // Fall back to default location
-      setUserLat(18.5204);
-      setUserLng(73.8567);
+      setUserLat(defaultLoc.lat);
+      setUserLng(defaultLoc.lng);
+      setSelectedLocation("Divgi, Karnataka");
+      hasSetLocation = true;
     }
+
+    // Fallback timeout - if geolocation takes too long
+    const fallbackTimer = setTimeout(() => {
+      if (!hasSetLocation) {
+        console.log("📍 Geolocation timeout - using default: Divgi, Karnataka");
+        setUserLat(defaultLoc.lat);
+        setUserLng(defaultLoc.lng);
+        setSelectedLocation("Divgi, Karnataka");
+      }
+    }, 10000);
+
+    return () => clearTimeout(fallbackTimer);
   }, []);
 
   useEffect(() => {
@@ -113,7 +135,24 @@ function Dashboard() {
   }, [userLat, userLng]);
 
   if (!weather || !prediction) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Connecting to live feed...</div>;
+    return (
+      <div className="p-12 text-center">
+        <div className="animate-pulse space-y-4">
+          <div className="inline-block">
+            <div className="text-4xl mb-4">🌍</div>
+          </div>
+          <div className="text-muted-foreground">
+            <p className="font-semibold mb-2">Detecting your location...</p>
+            <p className="text-sm">Fetching live weather data for {selectedLocation}</p>
+          </div>
+          <div className="flex gap-2 justify-center mt-4">
+            <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
+            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{animationDelay: "0.1s"}}></div>
+            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{animationDelay: "0.2s"}}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const rc = riskClasses[prediction.risk];
@@ -140,20 +179,22 @@ function Dashboard() {
             </div>
             {/* Location Selector */}
             <select
+              value={selectedLocation}
               onChange={(e) => {
-                const loc = locations[e.target.value];
+                const locName = e.target.value;
+                const loc = locations[locName];
                 if (loc) {
+                  console.log(`📍 Location changed to: ${locName}`);
+                  setSelectedLocation(locName);
                   setUserLat(loc.lat);
                   setUserLng(loc.lng);
                 }
               }}
-              className="text-xs px-2 py-1 rounded-md border border-border bg-card hover:bg-muted cursor-pointer transition"
-              defaultValue=""
+              className="text-xs px-3 py-2 rounded-md border border-primary/30 bg-card hover:bg-muted cursor-pointer transition font-medium"
             >
-              <option value="">Change location...</option>
-              {Object.entries(locations).map(([name]) => (
-                <option key={name} value={name}>
-                  {name}
+              {Object.keys(locations).map((locName) => (
+                <option key={locName} value={locName}>
+                  {locName}
                 </option>
               ))}
             </select>
