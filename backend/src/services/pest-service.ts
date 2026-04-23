@@ -28,14 +28,14 @@ const baseLocation = {
 
 // Known Karnataka locations for fast lookup
 const karnatakaCities = [
-  { name: "Divgi, Karnataka", lat: 13.9673, lng: 75.1239, radius: 0.02 },
-  { name: "Tiptur, Karnataka", lat: 13.4755, lng: 75.8129, radius: 0.02 },
-  { name: "Bangalore, Karnataka", lat: 12.9716, lng: 77.5946, radius: 0.05 },
-  { name: "Belgaum, Karnataka", lat: 15.8628, lng: 75.6236, radius: 0.02 },
-  { name: "Dharwad, Karnataka", lat: 15.4589, lng: 75.5239, radius: 0.02 },
-  { name: "Hubballi, Karnataka", lat: 15.3647, lng: 75.1066, radius: 0.02 },
-  { name: "Mangalore, Karnataka", lat: 12.8628, lng: 74.8628, radius: 0.03 },
-  { name: "Mysore, Karnataka", lat: 12.2958, lng: 76.6394, radius: 0.03 },
+  { id: "z1", name: "Divgi, Karnataka", lat: 13.9673, lng: 75.1239, radius: 0.02 },
+  { id: "z2", name: "Tiptur, Karnataka", lat: 13.4755, lng: 75.8129, radius: 0.02 },
+  { id: "z3", name: "Bangalore, Karnataka", lat: 12.9716, lng: 77.5946, radius: 0.05 },
+  { id: "z4", name: "Belgaum, Karnataka", lat: 15.8628, lng: 75.6236, radius: 0.02 },
+  { id: "z5", name: "Dharwad, Karnataka", lat: 15.4589, lng: 75.5239, radius: 0.02 },
+  { id: "z6", name: "Hubballi, Karnataka", lat: 15.3647, lng: 75.1066, radius: 0.02 },
+  { id: "z7", name: "Mangalore, Karnataka", lat: 12.8628, lng: 74.8628, radius: 0.03 },
+  { id: "z8", name: "Mysore, Karnataka", lat: 12.2958, lng: 76.6394, radius: 0.03 },
 ];
 
 // Find nearest known location or reverse geocode
@@ -184,6 +184,44 @@ export function riskColor(risk: RiskLevel) {
   return "risk-low";
 }
 
+// Generate risk zones based on actual weather data for each Karnataka region
+async function generateRiskZones(): Promise<Array<{ id: string; lat: number; lng: number; radius: number; level: RiskLevel; label: string }>> {
+  const zones = await Promise.all(
+    karnatakaCities.map(async (city) => {
+      const weather = await generateWeather(city.lat, city.lng);
+      const prediction = await predictPest(weather);
+      
+      return {
+        id: city.id,
+        lat: city.lat,
+        lng: city.lng,
+        radius: 1500,
+        level: prediction.risk,
+        label: `${prediction.pest} — ${city.name}`,
+      };
+    })
+  );
+  
+  return zones;
+}
+
+export async function getRiskZones(): Promise<Array<{ id: string; lat: number; lng: number; radius: number; level: RiskLevel; label: string }>> {
+  try {
+    return await generateRiskZones();
+  } catch (err) {
+    console.error("Failed to generate risk zones:", err);
+    // Fallback to default zones
+    return karnatakaCities.map((city) => ({
+      id: city.id,
+      lat: city.lat,
+      lng: city.lng,
+      radius: 1500,
+      level: "MEDIUM" as RiskLevel,
+      label: `${city.name} - Risk data unavailable`,
+    }));
+  }
+}
+
 export const riskZones: Array<{
   id: string;
   lat: number;
@@ -192,9 +230,12 @@ export const riskZones: Array<{
   level: RiskLevel;
   label: string;
 }> = [
-    { id: "z1", lat: 18.55, lng: 73.85, radius: 2200, level: "HIGH", label: "High risk of locust outbreak — Sector 7G" },
-    { id: "z2", lat: 18.49, lng: 73.83, radius: 1700, level: "MEDIUM", label: "Aphid pressure rising — Vineyard B" },
-    { id: "z3", lat: 18.53, lng: 73.9, radius: 2600, level: "LOW", label: "Stable — Maize fields E2" },
-    { id: "z4", lat: 18.47, lng: 73.88, radius: 1400, level: "MEDIUM", label: "Armyworm watch — Plot 12B" },
-    { id: "z5", lat: 18.57, lng: 73.81, radius: 1900, level: "HIGH", label: "High risk of aphid swarm — North Orchard" },
+    { id: "z1", lat: 13.9673, lng: 75.1239, radius: 1500, level: "MEDIUM", label: "Divgi — Weather data updating..." },
+    { id: "z2", lat: 13.4755, lng: 75.8129, radius: 1500, level: "MEDIUM", label: "Tiptur — Weather data updating..." },
+    { id: "z3", lat: 12.9716, lng: 77.5946, radius: 1500, level: "LOW", label: "Bangalore — Urban region" },
+    { id: "z4", lat: 15.8628, lng: 75.6236, radius: 1500, level: "MEDIUM", label: "Belgaum — Weather data updating..." },
+    { id: "z5", lat: 15.4589, lng: 75.5239, radius: 1500, level: "LOW", label: "Dharwad — Weather data updating..." },
+    { id: "z6", lat: 15.3647, lng: 75.1066, radius: 1500, level: "MEDIUM", label: "Hubballi — Weather data updating..." },
+    { id: "z7", lat: 12.8628, lng: 74.8628, radius: 1500, level: "LOW", label: "Mangalore — Coastal region" },
+    { id: "z8", lat: 12.2958, lng: 76.6394, radius: 1500, level: "LOW", label: "Mysore — Weather data updating..." },
   ];

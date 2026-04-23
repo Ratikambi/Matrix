@@ -16,7 +16,7 @@ const colorByLevel = {
   LOW: "#46b06b",
 } as const;
 
-export function RiskMap({ center = [18.5204, 73.8567] as [number, number], riskZones = [] }: { center?: [number, number]; riskZones?: RiskZone[] }) {
+export function RiskMap({ center = [15.5, 75.9] as [number, number], riskZones = [] }: { center?: [number, number]; riskZones?: RiskZone[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
 

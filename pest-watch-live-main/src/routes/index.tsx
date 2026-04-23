@@ -184,10 +184,28 @@ function Dashboard() {
                 const locName = e.target.value;
                 const loc = locations[locName];
                 if (loc) {
-                  console.log(`📍 Location changed to: ${locName}`);
+                  console.log(`📍 Location changed to: ${locName} (${loc.lat}, ${loc.lng})`);
                   setSelectedLocation(locName);
                   setUserLat(loc.lat);
                   setUserLng(loc.lng);
+                  
+                  // Immediately fetch weather for the selected location
+                  (async () => {
+                    try {
+                      const url = new URL("/api/live", window.location.origin);
+                      url.searchParams.append("lat", loc.lat.toString());
+                      url.searchParams.append("lng", loc.lng.toString());
+                      console.log("📡 Fetching weather for selected location:", { lat: loc.lat, lng: loc.lng });
+                      const res = await fetch(url.toString());
+                      if (!res.ok) return;
+                      const data = await res.json();
+                      console.log("✅ Weather data for selected location:", data.weather.location);
+                      setWeather(data.weather);
+                      setPrediction(data.prediction);
+                    } catch (err) {
+                      console.error("Failed to fetch weather for selected location:", err);
+                    }
+                  })();
                 }
               }}
               className="text-xs px-3 py-2 rounded-md border border-primary/30 bg-card hover:bg-muted cursor-pointer transition font-medium"

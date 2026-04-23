@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generateWeather, predictPest, riskZones } from "../services/pest-service";
+import { generateWeather, predictPest, riskZones, getRiskZones } from "../services/pest-service";
 
 const router = Router();
 
@@ -38,9 +38,16 @@ router.post("/predict", async (req, res) => {
   }
 });
 
-// Get risk zones for the map
-router.get("/zones", (req, res) => {
-  res.json(riskZones);
+// Get risk zones for the map - dynamically calculated based on weather
+router.get("/zones", async (req, res) => {
+  try {
+    const zones = await getRiskZones();
+    res.json(zones);
+  } catch (err) {
+    console.error("Failed to fetch risk zones:", err);
+    // Fallback to static zones
+    res.json(riskZones);
+  }
 });
 
 // Enhanced Chatbot logic with crop-specific advice
